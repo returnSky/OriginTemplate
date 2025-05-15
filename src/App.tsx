@@ -1,11 +1,4 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   ScrollView,
@@ -15,6 +8,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 
 import {
   Colors,
@@ -24,12 +18,25 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import AppErrorBoundary from '@/components/AppErrorBoundary';
+import RootNavigation from '@/navigations/RootNavigation';
+
 type SectionProps = PropsWithChildren<{
   title: string;
+  hasError?: boolean;
 }>;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
+function Section({
+  // children,
+  title,
+  hasError = false,
+}: SectionProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+
+  if (hasError) {
+    throw new Error('This is an error');
+  }
+
   return (
     <View style={styles.sectionContainer}>
       <Text
@@ -41,7 +48,7 @@ function Section({children, title}: SectionProps): React.JSX.Element {
         ]}>
         {title}
       </Text>
-      <Text
+      {/* <Text
         style={[
           styles.sectionDescription,
           {
@@ -49,7 +56,7 @@ function Section({children, title}: SectionProps): React.JSX.Element {
           },
         ]}>
         {children}
-      </Text>
+      </Text> */}
     </View>
   );
 }
@@ -72,40 +79,28 @@ function App(): React.JSX.Element {
    */
   const safePadding = '5%';
 
+  // const [isShow, setIsShow] = useState(false);
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     setIsShow(true);
+  //   }, 1000);
+  // }, []);
+
+  // if (isShow) {
+  //   return (
+  //     <SafeAreaView>
+  //       <Text>Test World</Text>
+  //     </SafeAreaView>
+  //   );
+  // }
+
   return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
-        </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
+    <SafeAreaProvider>
+      <AppErrorBoundary>
+        <RootNavigation />
+      </AppErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 
