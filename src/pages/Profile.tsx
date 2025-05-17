@@ -21,7 +21,6 @@ const styles = StyleSheet.create({
 
 const Profile = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
-  console.log('🚀 ~ Profile ~ navigation:', navigation);
 
   const onPress = () => {
     navigation.navigate('Home', undefined, {pop: true});
