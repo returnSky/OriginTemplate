@@ -1,0 +1,8 @@
+node_modules
+.vscode
+android
+ios
+coverage
+build
+dist
+yarn.lock

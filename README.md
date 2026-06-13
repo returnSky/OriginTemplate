@@ -1,97 +1,85 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# OriginTemplate
 
-# Getting Started
+React Native CLI TypeScript scaffold with common app foundations already wired in.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Included
 
-## Step 1: Start Metro
+- Typed native stack navigation.
+- App providers for theme, authentication, TanStack Query, and global feedback.
+- Light, dark, and system theme modes.
+- Axios HTTP client with API envelope validation and auth token injection.
+- Zustand stores for auth and preferences.
+- TanStack Query client with React Native app-focus integration.
+- MMKV key-value storage for persisted app state.
+- Keychain-backed secure session storage.
+- Reusable `Screen`, `AppButton`, and `StateView` components.
+- `useAsyncTask` hook for loading, error, and data flows.
+- App-level error boundary with retry fallback.
+- Path alias: `@/*` maps to `src/*`.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Project Structure
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+```txt
+src/
+  components/      Shared UI primitives and app feedback provider
+  config/          Runtime app config
+  contexts/        AppProviders, auth, and theme contexts
+  hooks/           Shared hooks
+  navigations/     Root navigator and route types
+  pages/           Screen components
+  services/        API, auth session, HTTP, and storage modules
+  stores/          Zustand stores
+  theme/           Design tokens and light/dark themes
+  utils/           Shared utilities
+```
+
+## Commands
 
 ```sh
-# Using npm
-npm start
-
-# OR using Yarn
 yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
 yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
 yarn ios
+yarn lint
+yarn typecheck
+yarn format:check
+yarn test
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+The repo includes `yarn.lock`, so prefer Yarn when adding or updating dependencies.
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## HTTP Contract
 
-## Step 3: Modify your app
+The shared HTTP client expects API responses shaped like:
 
-Now that you have successfully run the app, let's make changes!
+```ts
+{
+  code: number;
+  data: T;
+  message: string;
+}
+```
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+`code === 200` is treated as success. `http.get<T>()`, `http.post<T>()`, and the other helpers return the unwrapped `data` payload.
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## Configuration Notes
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+- `src/config/index.ts` centralizes app, API, query, storage, and auth settings.
+- Android emulator requests use `http://10.0.2.2:3000`; iOS uses `http://localhost:3000`.
+- `src/services/storage` exposes an MMKV adapter for app storage and Zustand persistence.
+- `src/services/auth/sessionStorage.ts` stores sensitive session data through Keychain.
+- `src/services/query` exposes the shared TanStack Query client and query key factory.
 
-## Congratulations! :tada:
+## State And Storage
 
-You've successfully run and modified your React Native App. :partying_face:
+- Put client-only UI/app state in Zustand stores under `src/stores`.
+- Put remote server state in TanStack Query hooks instead of duplicating it in Zustand.
+- Put non-sensitive persisted values in MMKV.
+- Put access tokens, refresh tokens, and credentials in Keychain.
 
-### Now what?
+## Native Setup
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+Make sure the React Native development environment is ready before running Android or iOS builds:
 
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- React Native environment setup: https://reactnative.dev/docs/set-up-your-environment
+- iOS first install: `bundle install` then `bundle exec pod install` from `ios/`
+- After adding native dependencies such as MMKV, Nitro Modules, or Keychain, rebuild Android/iOS apps.

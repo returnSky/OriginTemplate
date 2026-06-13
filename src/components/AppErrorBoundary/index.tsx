@@ -1,25 +1,35 @@
-import type {ErrorInfo} from 'react';
-import type {ErrorBoundaryProps} from 'react-error-boundary';
+import type {ErrorInfo, PropsWithChildren, ReactNode} from 'react';
 
 import React from 'react';
 import {ErrorBoundary} from 'react-error-boundary';
 
 import DefaultFallback from './DefaultFallback';
 
+interface AppErrorBoundaryProps extends PropsWithChildren {
+  fallback?: ReactNode;
+  onError?: (error: unknown, info: ErrorInfo) => void;
+}
+
 const AppErrorBoundary = ({
   fallback = null,
   onError,
-  ...props
-}: Partial<ErrorBoundaryProps>) => {
-  function handleError(error: Error, info: ErrorInfo) {
-    onError && onError(error, info);
+  children,
+}: AppErrorBoundaryProps) => {
+  function handleError(error: unknown, info: ErrorInfo) {
+    onError?.(error, info);
+  }
+
+  if (fallback) {
+    return (
+      <ErrorBoundary fallback={fallback} onError={handleError}>
+        {children}
+      </ErrorBoundary>
+    );
   }
 
   return (
-    <ErrorBoundary
-      fallback={fallback ?? <DefaultFallback />}
-      onError={handleError}>
-      {props.children}
+    <ErrorBoundary FallbackComponent={DefaultFallback} onError={handleError}>
+      {children}
     </ErrorBoundary>
   );
 };

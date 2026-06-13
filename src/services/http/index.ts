@@ -1,41 +1,70 @@
-import axios, {AxiosInstance} from 'axios';
-import {requestInterceptor, responseInterceptor} from './interceptors';
-import {RequestConfig} from './types';
+import axios, {AxiosInstance, AxiosResponse} from 'axios';
 
-// 创建 axios 实例
+import {appConfig} from '@/config';
+
+import {requestInterceptor, responseInterceptor} from './interceptors';
+import {ApiResponse, RequestConfig} from './types';
+
 const instance: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:3000', // 替换为实际的 API 地址
-  timeout: 10 * 1000,
+  baseURL: appConfig.api.baseURL,
+  timeout: appConfig.api.timeout,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 添加拦截器
 requestInterceptor(instance);
 responseInterceptor(instance);
 
-// 封装请求方法
+const unwrapResponse = <T>(response: AxiosResponse<ApiResponse<T>>) => {
+  return response.data.data;
+};
+
 export const http = {
-  get: <T = any>(url: string, config?: RequestConfig) => {
-    return instance.get<T>(url, config);
+  request: async <T = unknown, TData = unknown>(
+    config: RequestConfig<TData>,
+  ) => {
+    const response = await instance.request<ApiResponse<T>>(config);
+    return unwrapResponse(response);
   },
 
-  post: <T = any>(url: string, data?: any, config?: RequestConfig) => {
-    return instance.post<T>(url, data, config);
+  get: async <T = unknown>(url: string, config?: RequestConfig) => {
+    const response = await instance.get<ApiResponse<T>>(url, config);
+    return unwrapResponse(response);
   },
 
-  put: <T = any>(url: string, data?: any, config?: RequestConfig) => {
-    return instance.put<T>(url, data, config);
+  post: async <T = unknown, TData = unknown>(
+    url: string,
+    data?: TData,
+    config?: RequestConfig<TData>,
+  ) => {
+    const response = await instance.post<ApiResponse<T>>(url, data, config);
+    return unwrapResponse(response);
   },
 
-  delete: <T = any>(url: string, config?: RequestConfig) => {
-    return instance.delete<T>(url, config);
+  put: async <T = unknown, TData = unknown>(
+    url: string,
+    data?: TData,
+    config?: RequestConfig<TData>,
+  ) => {
+    const response = await instance.put<ApiResponse<T>>(url, data, config);
+    return unwrapResponse(response);
   },
 
-  patch: <T = any>(url: string, data?: any, config?: RequestConfig) => {
-    return instance.patch<T>(url, data, config);
+  delete: async <T = unknown>(url: string, config?: RequestConfig) => {
+    const response = await instance.delete<ApiResponse<T>>(url, config);
+    return unwrapResponse(response);
+  },
+
+  patch: async <T = unknown, TData = unknown>(
+    url: string,
+    data?: TData,
+    config?: RequestConfig<TData>,
+  ) => {
+    const response = await instance.patch<ApiResponse<T>>(url, data, config);
+    return unwrapResponse(response);
   },
 };
 
 export default http;
+export type {ApiError, ApiResponse, RequestConfig} from './types';

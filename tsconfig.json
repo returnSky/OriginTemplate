@@ -1,6 +1,7 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
+  "extends": "@react-native/typescript-config",
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "types": ["react-native", "jest", "node"],
     "baseUrl": ".",
     "paths": {
@@ -8,6 +9,7 @@
     }
   },
   "include": [
+    "__tests__/**/*",
     "tests/**/*",
     "./src/**/*",
     "index.d.ts",
@@ -15,7 +17,8 @@
     ".*.mjs",
     "*.js",
     ".*.js",
-    "*.ts"
+    "*.ts",
+    "*.tsx"
   ],
   "exclude": ["node_modules", "android", "ios"]
 }
