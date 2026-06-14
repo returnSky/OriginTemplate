@@ -3,11 +3,20 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
-import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import Toast, {
+  type ToastConfig,
+  type ToastConfigParams,
+} from 'react-native-toast-message';
 
 import {useAppTheme} from '@/contexts/ThemeContext';
 
@@ -31,33 +40,87 @@ interface LoadingState {
   message?: string;
 }
 
+interface AppToastProps {
+  accentColor: string;
+  backgroundColor: string;
+  borderColor: string;
+  message?: string;
+  onPress: () => void;
+  textColor: string;
+}
+
+interface ToastRendererOptions {
+  accentColor: string;
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
+}
+
 const FeedbackContext = createContext<FeedbackContextValue | undefined>(
   undefined,
 );
 
+const AppToast = ({
+  accentColor,
+  backgroundColor,
+  borderColor,
+  message,
+  onPress,
+  textColor,
+}: AppToastProps) => (
+  <Pressable
+    accessibilityRole="alert"
+    onPress={onPress}
+    style={({pressed}) => [
+      styles.toast,
+      {
+        backgroundColor,
+        borderColor,
+        borderLeftColor: accentColor,
+      },
+      pressed ? styles.toastPressed : null,
+    ]}>
+    <Text style={[styles.toastText, {color: textColor}]}>{message}</Text>
+  </Pressable>
+);
+
+const createToastRenderer =
+  ({
+    accentColor,
+    backgroundColor,
+    borderColor,
+    textColor,
+  }: ToastRendererOptions) =>
+  ({text1, onPress, hide}: ToastConfigParams<unknown>) => (
+    <AppToast
+      accentColor={accentColor}
+      backgroundColor={backgroundColor}
+      borderColor={borderColor}
+      message={text1}
+      onPress={() => {
+        onPress();
+        hide();
+      }}
+      textColor={textColor}
+    />
+  );
+
 export const FeedbackProvider = ({children}: PropsWithChildren) => {
   const {theme} = useAppTheme();
-  const [toast, setToast] = useState<ToastOptions | null>(null);
   const [loading, setLoading] = useState<LoadingState>({visible: false});
 
-  useEffect(() => {
-    if (!toast) {
-      return undefined;
-    }
-
-    const timer = setTimeout(() => {
-      setToast(null);
-    }, toast.duration ?? 2200);
-
-    return () => clearTimeout(timer);
-  }, [toast]);
-
   const showToast = useCallback((options: ToastOptions) => {
-    setToast(options);
+    Toast.show({
+      type: options.type ?? 'info',
+      text1: options.message,
+      position: 'bottom',
+      bottomOffset: 34,
+      visibilityTime: options.duration ?? 2200,
+    });
   }, []);
 
   const hideToast = useCallback(() => {
-    setToast(null);
+    Toast.hide();
   }, []);
 
   const showLoading = useCallback((message?: string) => {
@@ -78,31 +141,45 @@ export const FeedbackProvider = ({children}: PropsWithChildren) => {
     [hideLoading, hideToast, showLoading, showToast],
   );
 
-  const toastColor =
-    toast?.type === 'error'
-      ? theme.colors.danger
-      : toast?.type === 'success'
-        ? theme.colors.success
-        : theme.colors.text;
+  const toastConfig = useMemo<ToastConfig>(() => {
+    const sharedOptions = {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+      textColor: theme.colors.text,
+    };
+
+    return {
+      error: createToastRenderer({
+        ...sharedOptions,
+        accentColor: theme.colors.danger,
+      }),
+      info: createToastRenderer({
+        ...sharedOptions,
+        accentColor: theme.colors.primary,
+      }),
+      success: createToastRenderer({
+        ...sharedOptions,
+        accentColor: theme.colors.success,
+      }),
+    };
+  }, [
+    theme.colors.border,
+    theme.colors.danger,
+    theme.colors.primary,
+    theme.colors.success,
+    theme.colors.surface,
+    theme.colors.text,
+  ]);
 
   return (
     <FeedbackContext.Provider value={value}>
       {children}
-      {toast ? (
-        <View
-          pointerEvents="none"
-          style={[
-            styles.toast,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: toastColor,
-            },
-          ]}>
-          <Text style={[styles.toastText, {color: theme.colors.text}]}>
-            {toast.message}
-          </Text>
-        </View>
-      ) : null}
+      <Toast
+        config={toastConfig}
+        position="bottom"
+        bottomOffset={34}
+        visibilityTime={2200}
+      />
       {loading.visible ? (
         <View style={styles.loadingBackdrop}>
           <View
@@ -133,11 +210,10 @@ export const useFeedback = () => {
 
 const styles = StyleSheet.create({
   toast: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 34,
+    width: '92%',
+    maxWidth: 520,
     borderLeftWidth: 4,
+    borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -146,6 +222,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.14,
     shadowRadius: 16,
     elevation: 6,
+  },
+  toastPressed: {
+    opacity: 0.9,
   },
   toastText: {
     fontSize: 15,
