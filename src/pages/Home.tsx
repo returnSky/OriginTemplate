@@ -5,6 +5,7 @@ import React, {useMemo, useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery} from '@tanstack/react-query';
+import {useTranslation} from 'react-i18next';
 
 import {AppButton, Screen, StateView} from '@/components';
 import {useFeedback} from '@/components/FeedbackProvider';
@@ -21,6 +22,7 @@ const Home = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const {showToast} = useFeedback();
   const {theme} = useAppTheme();
+  const {t} = useTranslation();
   const [requestCount, setRequestCount] = useState(0);
 
   const templateQuery = useQuery({
@@ -30,7 +32,7 @@ const Home = () => {
       await new Promise(resolve => setTimeout(resolve, 650));
 
       return {
-        message: 'Template query finished',
+        message: t('home.query.finished'),
         checkedAt: new Date().toISOString(),
       };
     },
@@ -38,14 +40,15 @@ const Home = () => {
 
   const features = useMemo(
     () => [
-      'Typed navigation',
-      'Zustand stores',
-      'TanStack Query',
-      'MMKV storage',
-      'Keychain session',
-      'Global feedback',
+      t('home.features.typedNavigation'),
+      t('home.features.zustandStores'),
+      t('home.features.tanstackQuery'),
+      t('home.features.mmkvStorage'),
+      t('home.features.keychainSession'),
+      t('home.features.globalFeedback'),
+      t('home.features.i18n'),
     ],
-    [],
+    [t],
   );
 
   const handleRefresh = async () => {
@@ -74,17 +77,17 @@ const Home = () => {
           {appConfig.appName}
         </Text>
         <Text style={[styles.description, {color: theme.colors.textMuted}]}>
-          A React Native CLI scaffold with common app foundations wired in.
+          {t('home.description')}
         </Text>
       </View>
 
       <View style={styles.actions}>
         <AppButton
-          title="Open Profile"
+          title={t('home.openProfile')}
           onPress={() => navigation.navigate('Profile')}
         />
         <AppButton
-          title="Settings"
+          title={t('home.settings')}
           variant="secondary"
           onPress={() => navigation.navigate('Settings')}
         />
@@ -99,7 +102,7 @@ const Home = () => {
           },
         ]}>
         <Text style={[styles.sectionTitle, {color: theme.colors.text}]}>
-          Included foundations
+          {t('home.includedFoundations')}
         </Text>
         {features.map(feature => (
           <View key={feature} style={styles.featureRow}>
@@ -116,14 +119,16 @@ const Home = () => {
       <StateView
         variant={templateQuery.isFetching ? 'loading' : 'empty'}
         title={
-          templateQuery.isFetching ? 'Checking template' : 'Query sample ready'
+          templateQuery.isFetching
+            ? t('home.query.checking')
+            : t('home.query.ready')
         }
         description={
           templateQuery.isFetching
-            ? 'Running a sample async task.'
-            : `Completed query checks: ${requestCount}`
+            ? t('home.query.running')
+            : t('home.query.completedChecks', {count: requestCount})
         }
-        actionLabel={templateQuery.isFetching ? undefined : 'Run query sample'}
+        actionLabel={templateQuery.isFetching ? undefined : t('home.query.run')}
         onAction={handleRefresh}
       />
     </Screen>

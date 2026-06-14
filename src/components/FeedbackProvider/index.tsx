@@ -13,6 +13,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import {useTranslation} from 'react-i18next';
 import Toast, {
   type ToastConfig,
   type ToastConfigParams,
@@ -107,6 +108,7 @@ const createToastRenderer =
 
 export const FeedbackProvider = ({children}: PropsWithChildren) => {
   const {theme} = useAppTheme();
+  const {t} = useTranslation();
   const [loading, setLoading] = useState<LoadingState>({visible: false});
 
   const showToast = useCallback((options: ToastOptions) => {
@@ -189,7 +191,7 @@ export const FeedbackProvider = ({children}: PropsWithChildren) => {
             ]}>
             <ActivityIndicator color={theme.colors.primary} />
             <Text style={[styles.loadingText, {color: theme.colors.text}]}>
-              {loading.message ?? 'Loading...'}
+              {loading.message ?? t('common.loading')}
             </Text>
           </View>
         </View>

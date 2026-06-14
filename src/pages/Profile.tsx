@@ -4,6 +4,7 @@ import type {RootStackParamList} from '@/navigations/RootNavigation';
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
 
 import {AppButton, Screen} from '@/components';
 import {useFeedback} from '@/components/FeedbackProvider';
@@ -21,11 +22,12 @@ const Profile = () => {
   const {theme} = useAppTheme();
   const {showToast} = useFeedback();
   const {user, isSignedIn, signIn, signOut, initializing} = useAuth();
+  const {t} = useTranslation();
 
   const handleAuthPress = async () => {
     if (isSignedIn) {
       await signOut();
-      showToast({message: 'Signed out', type: 'info'});
+      showToast({message: t('profile.signedOut'), type: 'info'});
       return;
     }
 
@@ -33,7 +35,7 @@ const Profile = () => {
       email: 'template@example.com',
       password: 'password',
     });
-    showToast({message: 'Signed in with template account', type: 'success'});
+    showToast({message: t('profile.signedIn'), type: 'success'});
   };
 
   return (
@@ -47,16 +49,14 @@ const Profile = () => {
           },
         ]}>
         <Text style={[styles.title, {color: theme.colors.text}]}>
-          {isSignedIn ? user?.name : 'Guest'}
+          {isSignedIn ? user?.name : t('profile.guest')}
         </Text>
         <Text style={[styles.description, {color: theme.colors.textMuted}]}>
-          {isSignedIn
-            ? user?.email
-            : 'Use this page as the starting point for real login and account UI.'}
+          {isSignedIn ? user?.email : t('profile.guestDescription')}
         </Text>
         {isSignedIn ? (
           <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-            Session: {appConfig.auth.keychainService}
+            {t('profile.session', {value: appConfig.auth.keychainService})}
           </Text>
         ) : null}
         <View style={styles.statusRow}>
@@ -71,20 +71,20 @@ const Profile = () => {
             ]}
           />
           <Text style={[styles.statusText, {color: theme.colors.textMuted}]}>
-            {isSignedIn ? 'Authenticated' : 'Anonymous session'}
+            {isSignedIn ? t('profile.authenticated') : t('profile.anonymous')}
           </Text>
         </View>
       </View>
 
       <View style={styles.actions}>
         <AppButton
-          title={isSignedIn ? 'Sign out' : 'Sign in'}
+          title={isSignedIn ? t('profile.signOut') : t('profile.signIn')}
           loading={initializing}
           variant={isSignedIn ? 'danger' : 'primary'}
           onPress={handleAuthPress}
         />
         <AppButton
-          title="Back Home"
+          title={t('profile.backHome')}
           variant="secondary"
           onPress={() => navigation.navigate('Home')}
         />

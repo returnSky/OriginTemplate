@@ -1,6 +1,10 @@
 import {Platform} from 'react-native';
 
 export type AppEnv = 'development' | 'staging' | 'production';
+export const appLanguages = ['en-US', 'zh-CN'] as const;
+export type AppLanguage = (typeof appLanguages)[number];
+export type AppLanguagePreference = AppLanguage | 'system';
+export const appLanguagePreferences = [...appLanguages, 'system'] as const;
 
 const localApiURL =
   Platform.select({
@@ -22,6 +26,11 @@ export const appConfig = {
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
     retry: 1,
+  },
+  i18n: {
+    defaultLanguage: 'en-US' as AppLanguage,
+    supportedLanguages: appLanguages,
+    languagePreferences: appLanguagePreferences,
   },
   storage: {
     mmkv: {

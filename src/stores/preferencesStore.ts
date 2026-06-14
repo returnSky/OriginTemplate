@@ -1,13 +1,15 @@
 import {create} from 'zustand';
 import {createJSONStorage, persist} from 'zustand/middleware';
 
-import {appConfig} from '@/config';
+import {appConfig, type AppLanguagePreference} from '@/config';
 import {ThemeMode} from '@/theme';
 import {syncStringStorage} from '@/services/storage';
 
 interface PreferencesState {
   themeMode: ThemeMode;
+  language: AppLanguagePreference;
   setThemeMode: (mode: ThemeMode) => void;
+  setLanguage: (language: AppLanguagePreference) => void;
   toggleThemeMode: () => void;
 }
 
@@ -15,6 +17,8 @@ export const usePreferencesStore = create<PreferencesState>()(
   persist(
     set => ({
       themeMode: 'system',
+      language: appConfig.i18n.defaultLanguage,
+      setLanguage: language => set({language}),
       setThemeMode: themeMode => set({themeMode}),
       toggleThemeMode: () =>
         set(state => ({
@@ -24,7 +28,10 @@ export const usePreferencesStore = create<PreferencesState>()(
     {
       name: appConfig.storage.keys.preferencesStore,
       storage: createJSONStorage(() => syncStringStorage),
-      partialize: state => ({themeMode: state.themeMode}),
+      partialize: state => ({
+        language: state.language,
+        themeMode: state.themeMode,
+      }),
     },
   ),
 );

@@ -1,25 +1,47 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {useQueryClient} from '@tanstack/react-query';
+import {getLocales, getTimeZone} from 'react-native-localize';
+import {useTranslation} from 'react-i18next';
 
 import {AppButton, Screen, StateView} from '@/components';
 import {useFeedback} from '@/components/FeedbackProvider';
-import {appConfig} from '@/config';
+import {appConfig, type AppLanguagePreference} from '@/config';
 import {useAppTheme} from '@/contexts/ThemeContext';
 import {getStorageInfo} from '@/services/storage';
+import {usePreferencesStore} from '@/stores/preferencesStore';
 
 const Settings = () => {
   const {theme, mode, setMode, toggleMode} = useAppTheme();
   const {showLoading, hideLoading, showToast} = useFeedback();
+  const {t, i18n} = useTranslation();
+  const language = usePreferencesStore(state => state.language);
+  const setLanguage = usePreferencesStore(state => state.setLanguage);
   const queryClient = useQueryClient();
   const storageInfo = getStorageInfo();
   const queryCount = queryClient.getQueryCache().getAll().length;
+  const deviceLocale =
+    getLocales()[0]?.languageTag ?? appConfig.i18n.defaultLanguage;
+  const timeZone = getTimeZone();
+  const themeModeLabels = {
+    system: t('settings.theme.modes.system'),
+    light: t('settings.theme.modes.light'),
+    dark: t('settings.theme.modes.dark'),
+  };
+  const languageLabels: Record<AppLanguagePreference, string> = {
+    'en-US': t('settings.language.options.english'),
+    'zh-CN': t('settings.language.options.chineseSimplified'),
+    system: t('settings.language.options.system'),
+  };
 
   const showLoadingDemo = () => {
-    showLoading('Preparing template...');
+    showLoading(t('settings.feedback.preparing'));
     setTimeout(() => {
       hideLoading();
-      showToast({message: 'Loading overlay closed', type: 'success'});
+      showToast({
+        message: t('settings.feedback.loadingClosed'),
+        type: 'success',
+      });
     }, 900);
   };
 
@@ -33,29 +55,34 @@ const Settings = () => {
             borderColor: theme.colors.border,
           },
         ]}>
-        <Text style={[styles.title, {color: theme.colors.text}]}>Theme</Text>
+        <Text style={[styles.title, {color: theme.colors.text}]}>
+          {t('settings.theme.title')}
+        </Text>
         <Text style={[styles.description, {color: theme.colors.textMuted}]}>
-          Current mode: {mode}
+          {t('settings.theme.currentMode', {mode: themeModeLabels[mode]})}
         </Text>
         <View style={styles.modeGrid}>
           <AppButton
-            title="System"
+            title={themeModeLabels.system}
             variant={mode === 'system' ? 'primary' : 'secondary'}
             onPress={() => setMode('system')}
+            style={styles.optionButton}
           />
           <AppButton
-            title="Light"
+            title={themeModeLabels.light}
             variant={mode === 'light' ? 'primary' : 'secondary'}
             onPress={() => setMode('light')}
+            style={styles.optionButton}
           />
           <AppButton
-            title="Dark"
+            title={themeModeLabels.dark}
             variant={mode === 'dark' ? 'primary' : 'secondary'}
             onPress={() => setMode('dark')}
+            style={styles.optionButton}
           />
         </View>
         <AppButton
-          title="Toggle Theme"
+          title={t('settings.theme.toggle')}
           variant="secondary"
           onPress={toggleMode}
           style={styles.fullButton}
@@ -71,19 +98,61 @@ const Settings = () => {
           },
         ]}>
         <Text style={[styles.title, {color: theme.colors.text}]}>
-          Runtime config
+          {t('settings.language.title')}
+        </Text>
+        <Text style={[styles.description, {color: theme.colors.textMuted}]}>
+          {t('settings.language.currentPreference', {
+            language: languageLabels[language],
+          })}
         </Text>
         <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-          API: {appConfig.api.baseURL}
+          {t('settings.language.resolved', {language: i18n.language})}
         </Text>
         <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-          Timeout: {appConfig.api.timeout}ms
+          {t('settings.language.deviceLocale', {locale: deviceLocale})}
         </Text>
         <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-          Query stale: {appConfig.query.staleTime}ms
+          {t('settings.language.timeZone', {timeZone})}
+        </Text>
+        <View style={styles.modeGrid}>
+          {appConfig.i18n.languagePreferences.map(option => (
+            <AppButton
+              key={option}
+              title={languageLabels[option]}
+              variant={language === option ? 'primary' : 'secondary'}
+              onPress={() => setLanguage(option)}
+              style={styles.optionButton}
+            />
+          ))}
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.section,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
+        ]}>
+        <Text style={[styles.title, {color: theme.colors.text}]}>
+          {t('settings.runtime.title')}
         </Text>
         <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-          Keychain: {appConfig.auth.keychainService}
+          {t('settings.runtime.api', {value: appConfig.api.baseURL})}
+        </Text>
+        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+          {t('settings.runtime.timeout', {value: appConfig.api.timeout})}
+        </Text>
+        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+          {t('settings.runtime.queryStale', {
+            value: appConfig.query.staleTime,
+          })}
+        </Text>
+        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+          {t('settings.runtime.keychain', {
+            value: appConfig.auth.keychainService,
+          })}
         </Text>
       </View>
 
@@ -95,30 +164,35 @@ const Settings = () => {
             borderColor: theme.colors.border,
           },
         ]}>
-        <Text style={[styles.title, {color: theme.colors.text}]}>Storage</Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-          MMKV: {storageInfo.id}
+        <Text style={[styles.title, {color: theme.colors.text}]}>
+          {t('settings.storage.title')}
         </Text>
         <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-          Keys: {storageInfo.length}
+          {t('settings.storage.mmkv', {value: storageInfo.id})}
         </Text>
         <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-          Bytes: {storageInfo.byteSize}
+          {t('settings.storage.keys', {value: storageInfo.length})}
         </Text>
         <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
-          Query cache: {queryCount}
+          {t('settings.storage.bytes', {value: storageInfo.byteSize})}
+        </Text>
+        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+          {t('settings.storage.queryCache', {value: queryCount})}
         </Text>
       </View>
 
       <View style={styles.actions}>
         <AppButton
-          title="Show Toast"
+          title={t('settings.feedback.showToast')}
           onPress={() =>
-            showToast({message: 'Global toast is ready', type: 'info'})
+            showToast({
+              message: t('settings.feedback.toastReady'),
+              type: 'info',
+            })
           }
         />
         <AppButton
-          title="Show Loading"
+          title={t('settings.feedback.showLoading')}
           variant="secondary"
           onPress={showLoadingDemo}
         />
@@ -126,10 +200,15 @@ const Settings = () => {
 
       <StateView
         variant="error"
-        title="Error state sample"
-        description="Use StateView for empty, loading, and error sections."
-        actionLabel="Retry"
-        onAction={() => showToast({message: 'Retry clicked', type: 'info'})}
+        title={t('settings.stateSample.title')}
+        description={t('settings.stateSample.description')}
+        actionLabel={t('settings.stateSample.retry')}
+        onAction={() =>
+          showToast({
+            message: t('settings.stateSample.retryClicked'),
+            type: 'info',
+          })
+        }
       />
     </Screen>
   );
@@ -159,8 +238,13 @@ const styles = StyleSheet.create({
   },
   modeGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginTop: 14,
+  },
+  optionButton: {
+    flexBasis: '30%',
+    flexGrow: 1,
   },
   fullButton: {
     marginTop: 12,

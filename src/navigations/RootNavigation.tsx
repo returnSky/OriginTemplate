@@ -6,6 +6,7 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 
 import {useAppTheme} from '@/contexts/ThemeContext';
 import Home from '@/pages/Home';
@@ -22,6 +23,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const RootStack = () => {
   const {theme} = useAppTheme();
+  const {t} = useTranslation();
 
   return (
     <Stack.Navigator
@@ -35,17 +37,17 @@ const RootStack = () => {
       <Stack.Screen
         name="Home"
         component={Home}
-        options={{title: 'Template'}}
+        options={{title: t('navigation.template')}}
       />
       <Stack.Screen
         name="Profile"
         component={Profile}
-        options={{title: 'Profile'}}
+        options={{title: t('navigation.profile')}}
       />
       <Stack.Screen
         name="Settings"
         component={Settings}
-        options={{title: 'Settings'}}
+        options={{title: t('navigation.settings')}}
       />
     </Stack.Navigator>
   );

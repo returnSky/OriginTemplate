@@ -2,18 +2,20 @@ import React from 'react';
 import type {FallbackProps} from 'react-error-boundary';
 import {Pressable, View, Text, StyleSheet} from 'react-native';
 
+import i18n from '@/services/i18n';
+
 const DefaultFallback = ({resetErrorBoundary}: FallbackProps) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Something went wrong</Text>
+      <Text style={styles.title}>{i18n.t('errorBoundary.title')}</Text>
       <Text style={styles.description}>
-        The app hit an unexpected error. You can retry or reload the app.
+        {i18n.t('errorBoundary.description')}
       </Text>
       <Pressable
         accessibilityRole="button"
         onPress={resetErrorBoundary}
         style={styles.button}>
-        <Text style={styles.buttonText}>Try again</Text>
+        <Text style={styles.buttonText}>{i18n.t('errorBoundary.retry')}</Text>
       </Pressable>
     </View>
   );

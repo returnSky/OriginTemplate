@@ -1,5 +1,6 @@
 import React from 'react';
 import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
+import {useTranslation} from 'react-i18next';
 
 import AppButton from '@/components/AppButton';
 import {useAppTheme} from '@/contexts/ThemeContext';
@@ -14,10 +15,10 @@ interface StateViewProps {
   onAction?: () => void;
 }
 
-const defaultTitle: Record<StateViewVariant, string> = {
-  loading: 'Loading',
-  empty: 'No data',
-  error: 'Something went wrong',
+const defaultTitleKey: Record<StateViewVariant, string> = {
+  loading: 'stateView.loading.title',
+  empty: 'stateView.empty.title',
+  error: 'stateView.error.title',
 };
 
 const StateView = ({
@@ -28,6 +29,7 @@ const StateView = ({
   onAction,
 }: StateViewProps) => {
   const {theme} = useAppTheme();
+  const {t} = useTranslation();
 
   return (
     <View
@@ -66,7 +68,7 @@ const StateView = ({
         </View>
       )}
       <Text style={[styles.title, {color: theme.colors.text}]}>
-        {title ?? defaultTitle[variant]}
+        {title ?? t(defaultTitleKey[variant])}
       </Text>
       {description ? (
         <Text style={[styles.description, {color: theme.colors.textMuted}]}>
