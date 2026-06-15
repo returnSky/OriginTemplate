@@ -5,6 +5,6 @@ module.exports = {
     '^react-native-mmkv$': '<rootDir>/__mocks__/react-native-mmkv.ts',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@react-navigation|@tanstack|react-native-localize|react-native-safe-area-context|react-native-screens|react-native-toast-message|react-native-mmkv|react-native-nitro-modules|zustand)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@react-navigation|@tanstack|@tamagui|tamagui|react-native-localize|react-native-safe-area-context|react-native-screens|react-native-toast-message|react-native-mmkv|react-native-nitro-modules|zustand)/)',
   ],
 };

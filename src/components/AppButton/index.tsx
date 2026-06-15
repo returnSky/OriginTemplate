@@ -1,14 +1,6 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  ViewStyle,
-} from 'react-native';
-
-import {useAppTheme} from '@/contexts/ThemeContext';
+import {StyleProp, StyleSheet, ViewStyle} from 'react-native';
+import {Button, Spinner, Text} from 'tamagui';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger';
 
@@ -21,6 +13,9 @@ interface AppButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
+const buttonPressedStyle = {opacity: 0.82};
+const buttonDisabledStyle = {opacity: 0.58};
+
 const AppButton = ({
   title,
   onPress,
@@ -29,62 +24,60 @@ const AppButton = ({
   loading = false,
   style,
 }: AppButtonProps) => {
-  const {theme} = useAppTheme();
   const isDisabled = disabled || loading;
 
   const backgroundColor =
     variant === 'danger'
-      ? theme.colors.danger
+      ? '$danger'
       : variant === 'secondary'
-        ? theme.colors.surfaceMuted
-        : theme.colors.primary;
+        ? '$surfaceMuted'
+        : '$primary';
 
-  const color =
-    variant === 'secondary' ? theme.colors.text : theme.colors.primaryText;
+  const color = variant === 'secondary' ? '$color' : '$primaryText';
+  const borderColor =
+    variant === 'secondary' ? '$borderColor' : backgroundColor;
 
   return (
-    <Pressable
+    <Button
+      unstyled
       accessibilityRole="button"
       disabled={isDisabled}
       onPress={onPress}
-      style={({pressed}) => [
-        styles.button,
-        {
-          backgroundColor,
-          borderColor:
-            variant === 'secondary' ? theme.colors.border : backgroundColor,
-          opacity: isDisabled ? 0.58 : pressed ? 0.82 : 1,
-        },
-        style,
-      ]}>
+      minHeight={44}
+      alignItems="center"
+      justifyContent="center"
+      borderWidth={1}
+      borderRadius={8}
+      paddingHorizontal={16}
+      paddingVertical={10}
+      backgroundColor={backgroundColor}
+      borderColor={borderColor}
+      opacity={isDisabled ? 0.58 : 1}
+      pressStyle={isDisabled ? buttonDisabledStyle : buttonPressedStyle}
+      disabledStyle={buttonDisabledStyle}
+      style={style}>
       {loading ? (
-        <ActivityIndicator color={color} size="small" />
+        <Spinner color={color} size="small" />
       ) : (
-        <Text numberOfLines={2} style={[styles.title, {color}]}>
+        <Text
+          width="100%"
+          color={color}
+          fontSize={15}
+          fontWeight="700"
+          lineHeight={20}
+          textAlign="center"
+          numberOfLines={2}
+          style={styles.title}>
           {title}
         </Text>
       )}
-    </Pressable>
+    </Button>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
   title: {
-    width: '100%',
-    fontSize: 15,
     includeFontPadding: false,
-    lineHeight: 20,
-    fontWeight: '700',
-    textAlign: 'center',
   },
 });
 

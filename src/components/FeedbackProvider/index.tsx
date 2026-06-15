@@ -6,20 +6,12 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import Toast, {
   type ToastConfig,
   type ToastConfigParams,
 } from 'react-native-toast-message';
-
-import {useAppTheme} from '@/contexts/ThemeContext';
+import {Button, Spinner, Text, YStack} from 'tamagui';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -41,25 +33,35 @@ interface LoadingState {
   message?: string;
 }
 
+type AppThemeColorToken =
+  | '$borderColor'
+  | '$color'
+  | '$danger'
+  | '$primary'
+  | '$success'
+  | '$surface';
+
 interface AppToastProps {
-  accentColor: string;
-  backgroundColor: string;
-  borderColor: string;
+  accentColor: AppThemeColorToken;
+  backgroundColor: AppThemeColorToken;
+  borderColor: AppThemeColorToken;
   message?: string;
   onPress: () => void;
-  textColor: string;
+  textColor: AppThemeColorToken;
 }
 
 interface ToastRendererOptions {
-  accentColor: string;
-  backgroundColor: string;
-  borderColor: string;
-  textColor: string;
+  accentColor: AppThemeColorToken;
+  backgroundColor: AppThemeColorToken;
+  borderColor: AppThemeColorToken;
+  textColor: AppThemeColorToken;
 }
 
 const FeedbackContext = createContext<FeedbackContextValue | undefined>(
   undefined,
 );
+
+const toastPressedStyle = {opacity: 0.9};
 
 const AppToast = ({
   accentColor,
@@ -69,20 +71,30 @@ const AppToast = ({
   onPress,
   textColor,
 }: AppToastProps) => (
-  <Pressable
+  <Button
+    unstyled
     accessibilityRole="alert"
     onPress={onPress}
-    style={({pressed}) => [
-      styles.toast,
-      {
-        backgroundColor,
-        borderColor,
-        borderLeftColor: accentColor,
-      },
-      pressed ? styles.toastPressed : null,
-    ]}>
-    <Text style={[styles.toastText, {color: textColor}]}>{message}</Text>
-  </Pressable>
+    width="92%"
+    maxWidth={520}
+    borderLeftWidth={4}
+    borderWidth={1}
+    borderRadius={8}
+    paddingHorizontal={16}
+    paddingVertical={12}
+    shadowColor="#000000"
+    shadowOffset={{width: 0, height: 8}}
+    shadowOpacity={0.14}
+    shadowRadius={16}
+    elevation={6}
+    backgroundColor={backgroundColor}
+    borderColor={borderColor}
+    borderLeftColor={accentColor}
+    pressStyle={toastPressedStyle}>
+    <Text color={textColor} fontSize={15} fontWeight="600" lineHeight={22}>
+      {message}
+    </Text>
+  </Button>
 );
 
 const createToastRenderer =
@@ -107,7 +119,6 @@ const createToastRenderer =
   );
 
 export const FeedbackProvider = ({children}: PropsWithChildren) => {
-  const {theme} = useAppTheme();
   const {t} = useTranslation();
   const [loading, setLoading] = useState<LoadingState>({visible: false});
 
@@ -144,34 +155,27 @@ export const FeedbackProvider = ({children}: PropsWithChildren) => {
   );
 
   const toastConfig = useMemo<ToastConfig>(() => {
-    const sharedOptions = {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.border,
-      textColor: theme.colors.text,
+    const sharedOptions: Omit<ToastRendererOptions, 'accentColor'> = {
+      backgroundColor: '$surface',
+      borderColor: '$borderColor',
+      textColor: '$color',
     };
 
     return {
       error: createToastRenderer({
         ...sharedOptions,
-        accentColor: theme.colors.danger,
+        accentColor: '$danger',
       }),
       info: createToastRenderer({
         ...sharedOptions,
-        accentColor: theme.colors.primary,
+        accentColor: '$primary',
       }),
       success: createToastRenderer({
         ...sharedOptions,
-        accentColor: theme.colors.success,
+        accentColor: '$success',
       }),
     };
-  }, [
-    theme.colors.border,
-    theme.colors.danger,
-    theme.colors.primary,
-    theme.colors.success,
-    theme.colors.surface,
-    theme.colors.text,
-  ]);
+  }, []);
 
   return (
     <FeedbackContext.Provider value={value}>
@@ -183,18 +187,28 @@ export const FeedbackProvider = ({children}: PropsWithChildren) => {
         visibilityTime={2200}
       />
       {loading.visible ? (
-        <View style={styles.loadingBackdrop}>
-          <View
-            style={[
-              styles.loadingCard,
-              {backgroundColor: theme.colors.surface},
-            ]}>
-            <ActivityIndicator color={theme.colors.primary} />
-            <Text style={[styles.loadingText, {color: theme.colors.text}]}>
+        <YStack
+          position="absolute"
+          top={0}
+          right={0}
+          bottom={0}
+          left={0}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="rgba(15, 23, 42, 0.36)">
+          <YStack
+            minWidth={132}
+            alignItems="center"
+            borderRadius={8}
+            paddingHorizontal={20}
+            paddingVertical={18}
+            backgroundColor="$surface">
+            <Spinner color="$primary" />
+            <Text marginTop={10} color="$color" fontSize={14} lineHeight={20}>
               {loading.message ?? t('common.loading')}
             </Text>
-          </View>
-        </View>
+          </YStack>
+        </YStack>
       ) : null}
     </FeedbackContext.Provider>
   );
@@ -209,50 +223,3 @@ export const useFeedback = () => {
 
   return value;
 };
-
-const styles = StyleSheet.create({
-  toast: {
-    width: '92%',
-    maxWidth: 520,
-    borderLeftWidth: 4,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000000',
-    shadowOffset: {width: 0, height: 8},
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  toastPressed: {
-    opacity: 0.9,
-  },
-  toastText: {
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '600',
-  },
-  loadingBackdrop: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.36)',
-  },
-  loadingCard: {
-    minWidth: 132,
-    alignItems: 'center',
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-});

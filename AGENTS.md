@@ -8,23 +8,26 @@ This is a React Native CLI TypeScript scaffold with common app foundations wired
 - React: `19.2.7`
 - Language: TypeScript
 - Navigation: `@react-navigation/native` with native stack
+- UI library: `tamagui` with `@tamagui/config`
 - HTTP client: `axios`
 - Internationalization: `i18next`, `react-i18next`, and `react-native-localize`
 - Client state: `zustand`
 - Server state/cache: `@tanstack/react-query`
 - App persistence: `react-native-mmkv`
 - Secure session storage: `react-native-keychain`
+- Tamagui peer/runtime helper: `react-dom`
 - Path alias: `@/*` maps to `src/*`
 
 ## Important Paths
 
-- `src/App.tsx`: app root, wraps navigation in `SafeAreaProvider`, `AppErrorBoundary`, and `AppProviders`.
+- `src/App.tsx`: app root, wraps navigation in `SafeAreaProvider`, `ThemeProvider`, `AppErrorBoundary`, and `AppProviders`.
+- `tamagui.config.ts`: Tamagui config built from `@tamagui/config/v5`, with app theme tokens mapped from `src/theme`.
 - `src/config/index.ts`: shared app, API, query, storage, and auth configuration.
 - `src/navigations/RootNavigation.tsx`: stack navigator and route type definitions.
 - `src/pages/`: screen components.
-- `src/components/`: reusable UI primitives and global feedback provider.
+- `src/components/`: Tamagui-based reusable UI primitives and global feedback provider.
 - `src/components/AppErrorBoundary/`: app-level error boundary.
-- `src/contexts/`: app providers for theme, auth initialization, and TanStack Query.
+- `src/contexts/`: app providers for Tamagui theme, auth initialization, and TanStack Query.
 - `src/stores/`: Zustand stores for client-only app state.
 - `src/services/http/`: shared Axios instance, interceptors, request/response types.
 - `src/services/api/`: typed API modules built on the shared HTTP client.
@@ -56,12 +59,23 @@ The repo includes `yarn.lock`, so prefer Yarn when adding or updating dependenci
 ## Code Style
 
 - Follow the existing React Native TypeScript style.
-- Use `StyleSheet.create` for component styles.
+- Use Tamagui components from `tamagui` for app UI layout and shared UI primitives.
+- Prefer Tamagui theme tokens such as `$surface`, `$surfaceMuted`, `$primary`, `$primaryText`, `$color`, `$colorMuted`, `$borderColor`, `$success`, `$warning`, and `$danger` instead of hard-coded colors in UI components.
+- Keep shared UI primitives under `src/components` and consume them from screens when possible.
+- Use `StyleSheet.create` for React Native style objects that still need to be passed through `style`, such as `SafeAreaView` styles or small reusable style props.
 - Prefer functional components.
 - Keep imports using the configured `@/` alias for source modules.
 - Prettier settings are in `.prettierrc.js`: single quotes, no bracket spacing, trailing commas, 2-space tabs.
 - ESLint uses the flat config in `eslint.config.mjs` and extends `@react-native`.
 - Keep button/card text readable on Android and iOS; avoid fixed heights that clip multi-line text.
+
+## UI And Theme
+
+- `src/theme/index.ts` remains the source for app light/dark colors, spacing, radius, typography, and `ThemeMode`.
+- `tamagui.config.ts` bridges those theme colors into Tamagui tokens and disables shorthand-only restrictions so both long-form Tamagui style props and local conventions are usable.
+- `src/contexts/ThemeContext.tsx` resolves `system`, `light`, and `dark` preferences and passes the selected theme name to `TamaguiProvider`.
+- Keep `ThemeProvider` outside `AppErrorBoundary` so the error fallback can render Tamagui components with theme tokens.
+- The current setup uses `@tamagui/config/v5` base config without Reanimated/native animation drivers. Do not add `react-native-reanimated` or other native animation dependencies unless a task specifically requires Tamagui animation features that need them.
 
 ## Navigation
 
@@ -91,6 +105,7 @@ The repo includes `yarn.lock`, so prefer Yarn when adding or updating dependenci
 
 - MMKV v4 depends on `react-native-nitro-modules`.
 - `react-native-localize` is a native dependency used to resolve device locale information for the optional system language preference.
+- The current Tamagui setup adds JavaScript dependencies only. `react-dom` is included to satisfy Tamagui peer/module resolution from the top-level package entry and Jest runtime; it does not require native rebuilds.
 - After changing native dependencies, rebuild Android/iOS apps.
 - For iOS, run `bundle exec pod install` from `ios/` after dependency changes.
 - Do not modify generated/native files under `android/` or `ios/` unless the task specifically requires native changes.
@@ -100,6 +115,7 @@ The repo includes `yarn.lock`, so prefer Yarn when adding or updating dependenci
 - Run `yarn format:check`, `yarn lint`, `yarn typecheck`, and `yarn test` after code changes when feasible.
 - Jest maps `react-native-mmkv` to `__mocks__/react-native-mmkv.ts` because Nitro native modules are unavailable in the test runtime.
 - Jest maps `react-native-localize` to `__mocks__/react-native-localize.ts` because locale APIs are native-backed.
+- Jest transforms `tamagui` and `@tamagui/*` packages because Tamagui ships ESM/native entrypoints.
 - The default test imports `../src/App`.
 
 ## Working Tree Notes

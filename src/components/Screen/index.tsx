@@ -1,6 +1,7 @@
 import React, {PropsWithChildren} from 'react';
-import {ScrollView, StyleProp, StyleSheet, View, ViewStyle} from 'react-native';
+import {StyleProp, StyleSheet, ViewStyle} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {ScrollView, YStack} from 'tamagui';
 
 import {useAppTheme} from '@/contexts/ThemeContext';
 
@@ -23,15 +24,10 @@ const Screen = ({
       <SafeAreaView
         edges={['bottom']}
         style={[styles.container, {backgroundColor: theme.colors.background}]}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          style={styles.flex}
-          contentContainerStyle={[
-            styles.content,
-            contentContainerStyle,
-            style,
-          ]}>
-          {children}
+        <ScrollView keyboardShouldPersistTaps="handled" flex={1}>
+          <YStack padding={16} style={[contentContainerStyle, style]}>
+            {children}
+          </YStack>
         </ScrollView>
       </SafeAreaView>
     );
@@ -41,7 +37,9 @@ const Screen = ({
     <SafeAreaView
       edges={['bottom']}
       style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <View style={[styles.content, styles.flex, style]}>{children}</View>
+      <YStack flex={1} padding={16} style={style}>
+        {children}
+      </YStack>
     </SafeAreaView>
   );
 };
@@ -49,12 +47,6 @@ const Screen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
   },
 });
 

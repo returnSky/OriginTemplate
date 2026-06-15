@@ -1,8 +1,9 @@
-import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import React, {PropsWithChildren} from 'react';
+import {StyleSheet} from 'react-native';
 import {useQueryClient} from '@tanstack/react-query';
 import {getLocales, getTimeZone} from 'react-native-localize';
 import {useTranslation} from 'react-i18next';
+import {Text, XStack, YStack} from 'tamagui';
 
 import {AppButton, Screen, StateView} from '@/components';
 import {useFeedback} from '@/components/FeedbackProvider';
@@ -11,8 +12,20 @@ import {useAppTheme} from '@/contexts/ThemeContext';
 import {getStorageInfo} from '@/services/storage';
 import {usePreferencesStore} from '@/stores/preferencesStore';
 
+const Section = ({children}: PropsWithChildren) => (
+  <YStack
+    borderWidth={1}
+    borderRadius={8}
+    padding={16}
+    marginBottom={16}
+    backgroundColor="$surface"
+    borderColor="$borderColor">
+    {children}
+  </YStack>
+);
+
 const Settings = () => {
-  const {theme, mode, setMode, toggleMode} = useAppTheme();
+  const {mode, setMode, toggleMode} = useAppTheme();
   const {showLoading, hideLoading, showToast} = useFeedback();
   const {t, i18n} = useTranslation();
   const language = usePreferencesStore(state => state.language);
@@ -47,21 +60,14 @@ const Settings = () => {
 
   return (
     <Screen scroll>
-      <View
-        style={[
-          styles.section,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
-          },
-        ]}>
-        <Text style={[styles.title, {color: theme.colors.text}]}>
+      <Section>
+        <Text color="$color" fontSize={18} fontWeight="800" lineHeight={26}>
           {t('settings.theme.title')}
         </Text>
-        <Text style={[styles.description, {color: theme.colors.textMuted}]}>
+        <Text marginTop={6} color="$colorMuted" fontSize={15} lineHeight={22}>
           {t('settings.theme.currentMode', {mode: themeModeLabels[mode]})}
         </Text>
-        <View style={styles.modeGrid}>
+        <XStack flexWrap="wrap" gap={10} marginTop={14}>
           <AppButton
             title={themeModeLabels.system}
             variant={mode === 'system' ? 'primary' : 'secondary'}
@@ -80,41 +86,34 @@ const Settings = () => {
             onPress={() => setMode('dark')}
             style={styles.optionButton}
           />
-        </View>
+        </XStack>
         <AppButton
           title={t('settings.theme.toggle')}
           variant="secondary"
           onPress={toggleMode}
           style={styles.fullButton}
         />
-      </View>
+      </Section>
 
-      <View
-        style={[
-          styles.section,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
-          },
-        ]}>
-        <Text style={[styles.title, {color: theme.colors.text}]}>
+      <Section>
+        <Text color="$color" fontSize={18} fontWeight="800" lineHeight={26}>
           {t('settings.language.title')}
         </Text>
-        <Text style={[styles.description, {color: theme.colors.textMuted}]}>
+        <Text marginTop={6} color="$colorMuted" fontSize={15} lineHeight={22}>
           {t('settings.language.currentPreference', {
             language: languageLabels[language],
           })}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.language.resolved', {language: i18n.language})}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.language.deviceLocale', {locale: deviceLocale})}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.language.timeZone', {timeZone})}
         </Text>
-        <View style={styles.modeGrid}>
+        <XStack flexWrap="wrap" gap={10} marginTop={14}>
           {appConfig.i18n.languagePreferences.map(option => (
             <AppButton
               key={option}
@@ -124,64 +123,50 @@ const Settings = () => {
               style={styles.optionButton}
             />
           ))}
-        </View>
-      </View>
+        </XStack>
+      </Section>
 
-      <View
-        style={[
-          styles.section,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
-          },
-        ]}>
-        <Text style={[styles.title, {color: theme.colors.text}]}>
+      <Section>
+        <Text color="$color" fontSize={18} fontWeight="800" lineHeight={26}>
           {t('settings.runtime.title')}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.runtime.api', {value: appConfig.api.baseURL})}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.runtime.timeout', {value: appConfig.api.timeout})}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.runtime.queryStale', {
             value: appConfig.query.staleTime,
           })}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.runtime.keychain', {
             value: appConfig.auth.keychainService,
           })}
         </Text>
-      </View>
+      </Section>
 
-      <View
-        style={[
-          styles.section,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
-          },
-        ]}>
-        <Text style={[styles.title, {color: theme.colors.text}]}>
+      <Section>
+        <Text color="$color" fontSize={18} fontWeight="800" lineHeight={26}>
           {t('settings.storage.title')}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.storage.mmkv', {value: storageInfo.id})}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.storage.keys', {value: storageInfo.length})}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.storage.bytes', {value: storageInfo.byteSize})}
         </Text>
-        <Text style={[styles.meta, {color: theme.colors.textMuted}]}>
+        <Text marginTop={8} color="$colorMuted" fontSize={14} lineHeight={20}>
           {t('settings.storage.queryCache', {value: queryCount})}
         </Text>
-      </View>
+      </Section>
 
-      <View style={styles.actions}>
+      <YStack gap={12} marginBottom={16}>
         <AppButton
           title={t('settings.feedback.showToast')}
           onPress={() =>
@@ -196,7 +181,7 @@ const Settings = () => {
           variant="secondary"
           onPress={showLoadingDemo}
         />
-      </View>
+      </YStack>
 
       <StateView
         variant="error"
@@ -215,43 +200,12 @@ const Settings = () => {
 };
 
 const styles = StyleSheet.create({
-  section: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: '800',
-  },
-  description: {
-    marginTop: 6,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  meta: {
-    marginTop: 8,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  modeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 14,
+  fullButton: {
+    marginTop: 12,
   },
   optionButton: {
     flexBasis: '30%',
     flexGrow: 1,
-  },
-  fullButton: {
-    marginTop: 12,
-  },
-  actions: {
-    gap: 12,
-    marginBottom: 16,
   },
 });
 

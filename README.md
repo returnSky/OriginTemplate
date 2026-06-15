@@ -5,8 +5,9 @@ React Native CLI TypeScript scaffold with common app foundations already wired i
 ## Included
 
 - Typed native stack navigation.
-- App providers for theme, authentication, TanStack Query, and global feedback.
+- App providers for Tamagui theme, authentication, TanStack Query, and global feedback.
 - Light, dark, and system theme modes.
+- Tamagui UI kit and themed primitives wired to the app design tokens.
 - i18next/react-i18next internationalization with React Native locale helpers.
 - Axios HTTP client with API envelope validation and auth token injection.
 - Zustand stores for auth and preferences.
@@ -22,7 +23,7 @@ React Native CLI TypeScript scaffold with common app foundations already wired i
 
 ```txt
 src/
-  components/      Shared UI primitives and app feedback provider
+  components/      Tamagui-based UI primitives and app feedback provider
   config/          Runtime app config
   contexts/        AppProviders, auth, and theme contexts
   hooks/           Shared hooks
@@ -32,6 +33,7 @@ src/
   stores/          Zustand stores
   theme/           Design tokens and light/dark themes
   utils/           Shared utilities
+tamagui.config.ts  Tamagui config and app theme-token bridge
 ```
 
 ## Commands
@@ -65,12 +67,22 @@ The shared HTTP client expects API responses shaped like:
 ## Configuration Notes
 
 - `src/config/index.ts` centralizes app, API, query, storage, and auth settings.
+- `tamagui.config.ts` creates the Tamagui config from `@tamagui/config/v5` and maps `src/theme` colors to app tokens such as `$surface`, `$surfaceMuted`, `$primary`, `$primaryText`, `$success`, `$warning`, `$danger`, `$color`, `$colorMuted`, and `$borderColor`.
+- `src/contexts/ThemeContext.tsx` owns light/dark/system resolution and wraps the app with `TamaguiProvider`.
 - Android emulator requests use `http://10.0.2.2:3000`; iOS uses `http://localhost:3000`.
 - `src/services/i18n` initializes i18next, exports language resolution helpers, and stores translation resources.
 - The default app language is `en-US`; `zh-CN` is also included, and the optional `system` preference resolves through `react-native-localize`.
 - `src/services/storage` exposes an MMKV adapter for app storage and Zustand persistence.
 - `src/services/auth/sessionStorage.ts` stores sensitive session data through Keychain.
 - `src/services/query` exposes the shared TanStack Query client and query key factory.
+
+## UI And Theme
+
+- Use Tamagui components from `tamagui` for app UI layout and primitives, such as `YStack`, `XStack`, `Text`, `Button`, `Spinner`, `Circle`, and `ScrollView`.
+- Prefer Tamagui theme tokens over hard-coded colors in UI components. Current app tokens are defined in `tamagui.config.ts` and sourced from `src/theme/index.ts`.
+- Keep reusable UI primitives under `src/components`, then use those primitives from screens when possible. Existing examples include `AppButton`, `Screen`, `StateView`, the feedback overlay, and the error fallback.
+- `ThemeProvider` is intentionally mounted outside `AppErrorBoundary` in `src/App.tsx`, so the error fallback can still render with Tamagui theme values.
+- The current Tamagui setup uses the v5 base config without adding Reanimated/native animation drivers. Add native animation dependencies only when the app starts using Tamagui components or animation features that require them.
 
 ## State And Storage
 
@@ -93,7 +105,9 @@ Make sure the React Native development environment is ready before running Andro
 - React Native environment setup: https://reactnative.dev/docs/set-up-your-environment
 - iOS first install: `bundle install` then `bundle exec pod install` from `ios/`
 - After adding native dependencies such as MMKV, Nitro Modules, Keychain, or React Native Localize, rebuild Android/iOS apps.
+- The current Tamagui integration adds JavaScript dependencies only. `react-dom` is installed to satisfy Tamagui peer resolution from its top-level package entry and Jest runtime; it does not require a native rebuild.
 
 ## Testing Notes
 
 - Jest maps native-only modules to files under `__mocks__/`, including `react-native-mmkv` and `react-native-localize`.
+- Jest transforms `tamagui` and `@tamagui/*` packages because Tamagui ships ESM/native entrypoints that must be compiled in the Jest runtime.
