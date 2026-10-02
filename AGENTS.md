@@ -4,8 +4,8 @@
 
 This is a React Native CLI TypeScript scaffold with common app foundations wired in.
 
-- React Native: `0.86.0`
-- React: `19.2.7`
+- React Native: `0.87.1`
+- React: `19.2.8`
 - Language: TypeScript
 - Navigation: `@react-navigation/native` with native stack
 - UI library: `tamagui` with `@tamagui/config`

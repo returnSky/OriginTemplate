@@ -71,10 +71,7 @@ const RootNavigation = () => {
 
   return (
     <>
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={theme.colors.surface}
-      />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <NavigationContainer theme={navigationTheme}>
         <RootStack />
       </NavigationContainer>

@@ -1,5 +1,12 @@
 module.exports = {
   preset: '@react-native/jest-preset',
+  testEnvironment: 'node',
+  testEnvironmentOptions: {
+    customExportConditions: ['require', 'react-native'],
+  },
+  transform: {
+    '^.+\\.(js|ts|tsx)$': require.resolve('babel-jest'),
+  },
   moduleNameMapper: {
     '^react-native-localize$': '<rootDir>/__mocks__/react-native-localize.ts',
     '^react-native-mmkv$': '<rootDir>/__mocks__/react-native-mmkv.ts',

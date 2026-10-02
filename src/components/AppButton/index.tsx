@@ -55,7 +55,7 @@ const AppButton = ({
       opacity={isDisabled ? 0.58 : 1}
       pressStyle={isDisabled ? buttonDisabledStyle : buttonPressedStyle}
       disabledStyle={buttonDisabledStyle}
-      style={style}>
+      style={StyleSheet.flatten(style)}>
       {loading ? (
         <Spinner color={color} size="small" />
       ) : (

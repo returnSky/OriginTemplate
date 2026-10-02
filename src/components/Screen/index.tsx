@@ -25,7 +25,9 @@ const Screen = ({
         edges={['bottom']}
         style={[styles.container, {backgroundColor: theme.colors.background}]}>
         <ScrollView keyboardShouldPersistTaps="handled" flex={1}>
-          <YStack padding={16} style={[contentContainerStyle, style]}>
+          <YStack
+            padding={16}
+            style={StyleSheet.flatten([contentContainerStyle, style])}>
             {children}
           </YStack>
         </ScrollView>
@@ -37,7 +39,7 @@ const Screen = ({
     <SafeAreaView
       edges={['bottom']}
       style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <YStack flex={1} padding={16} style={style}>
+      <YStack flex={1} padding={16} style={StyleSheet.flatten(style)}>
         {children}
       </YStack>
     </SafeAreaView>

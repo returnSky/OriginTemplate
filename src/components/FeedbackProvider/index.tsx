@@ -34,12 +34,7 @@ interface LoadingState {
 }
 
 type AppThemeColorToken =
-  | '$borderColor'
-  | '$color'
-  | '$danger'
-  | '$primary'
-  | '$success'
-  | '$surface';
+  '$borderColor' | '$color' | '$danger' | '$primary' | '$success' | '$surface';
 
 interface AppToastProps {
   accentColor: AppThemeColorToken;
