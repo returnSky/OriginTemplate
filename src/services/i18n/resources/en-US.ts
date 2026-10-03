@@ -6,6 +6,13 @@ const enUS = {
   common: {
     loading: 'Loading...',
   },
+  forms: {
+    showPassword: 'Show',
+    hidePassword: 'Hide',
+    required: 'This field is required.',
+    invalidEmail: 'Enter a valid email address.',
+    minLength: 'Enter at least {{count}} characters.',
+  },
   navigation: {
     template: 'Template',
     profile: 'Profile',
@@ -115,7 +122,16 @@ const enUS = {
     signOut: 'Sign out',
     backHome: 'Back Home',
     signedOut: 'Signed out',
-    signedIn: 'Signed in with template account',
+    signedIn: 'Signed in',
+    email: 'Email',
+    emailPlaceholder: 'you@example.com',
+    password: 'Password',
+    passwordHelp: 'Use at least 8 characters.',
+    demoDescription:
+      'Demo sign-in: enter any valid email and a password of at least 8 characters to create a local sample session.',
+    adapterDescription:
+      'Sign in with your account. An authentication provider must be connected before account sign-in is available.',
+    authFailed: 'Unable to complete sign-in or sign-out. Please try again.',
   },
 } as const;
 

@@ -8,6 +8,7 @@ module.exports = {
     '^.+\\.(js|ts|tsx)$': require.resolve('babel-jest'),
   },
   moduleNameMapper: {
+    '^react-native-config$': '<rootDir>/__mocks__/react-native-config.ts',
     '^react-native-localize$': '<rootDir>/__mocks__/react-native-localize.ts',
     '^react-native-mmkv$': '<rootDir>/__mocks__/react-native-mmkv.ts',
   },

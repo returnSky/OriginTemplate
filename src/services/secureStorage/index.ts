@@ -8,8 +8,15 @@ interface SecureCredentials {
 }
 
 const memoryCredentials = new Map<string, SecureCredentials>();
-
 const hasNativeKeychain = () => Boolean(NativeModules.RNKeychainManager);
+
+const assertDevelopmentFallback = () => {
+  if (!__DEV__) {
+    throw new Error(
+      'Native Keychain is unavailable. Rebuild the app with react-native-keychain.',
+    );
+  }
+};
 
 const keychainOptions = (service: string): Keychain.SetOptions => ({
   service,
@@ -20,6 +27,7 @@ const keychainOptions = (service: string): Keychain.SetOptions => ({
 export const secureStorage = {
   async getCredentials(service: string) {
     if (!hasNativeKeychain()) {
+      assertDevelopmentFallback();
       return memoryCredentials.get(service) ?? null;
     }
 
@@ -38,23 +46,33 @@ export const secureStorage = {
 
   async setCredentials(service: string, username: string, password: string) {
     if (!hasNativeKeychain()) {
+      assertDevelopmentFallback();
       memoryCredentials.set(service, {username, password, service});
       return;
     }
 
-    await Keychain.setGenericPassword(
+    const result = await Keychain.setGenericPassword(
       username,
       password,
       keychainOptions(service),
     );
+
+    if (result === false) {
+      throw new Error('Failed to save secure credentials.');
+    }
   },
 
   async removeCredentials(service: string) {
     if (!hasNativeKeychain()) {
+      assertDevelopmentFallback();
       memoryCredentials.delete(service);
       return;
     }
 
-    await Keychain.resetGenericPassword({service});
+    const removed = await Keychain.resetGenericPassword({service});
+
+    if (!removed) {
+      throw new Error('Failed to remove secure credentials.');
+    }
   },
 };

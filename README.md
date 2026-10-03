@@ -9,15 +9,22 @@ React Native CLI TypeScript scaffold with common app foundations already wired i
 - Light, dark, and system theme modes.
 - Tamagui UI kit and themed primitives wired to the app design tokens.
 - i18next/react-i18next internationalization with React Native locale helpers.
-- Axios HTTP client with API envelope validation and auth token injection.
-- Zustand stores for auth and preferences.
+- Axios HTTP client with envelope validation, typed errors, cancellation, token injection, and HTTP 401 session invalidation.
+- Replaceable authentication adapter with DEV Debug-only demo login and validated Keychain sessions.
+- Zustand stores with validated, versioned preference persistence and session isolation.
 - TanStack Query client with React Native app-focus integration.
 - MMKV key-value storage for persisted app state.
 - Keychain-backed secure session storage.
-- Reusable `Screen`, `AppButton`, and `StateView` components.
-- `useAsyncTask` hook for loading, error, and data flows.
+- Reusable `Screen`, `AppButton`, `AppInput`, `AppList`, and `StateView` components.
+- Validated login form with password visibility, keyboard avoidance, and accessible inputs.
+- Typed user query/mutation examples, transient-error retries, and cache updates protected across sessions.
+- `useAsyncTask` with latest-result and unmount protection, plus `useDebouncedValue`.
+- Native DEV/UAT/PROD config through `react-native-config`, cross-platform `ENVFILE` build scripts, and credential-redacting diagnostic logging.
+- One-command quality checks and a GitHub Actions workflow.
 - App-level error boundary with retry fallback.
 - Path alias: `@/*` maps to `src/*`.
+
+See [通用模板接入指南](docs/TEMPLATE.md) for environment setup, real authentication, request/query examples, UI usage, and extension points.
 
 ## Project Structure
 
@@ -46,9 +53,33 @@ yarn lint
 yarn typecheck
 yarn format:check
 yarn test
+yarn validate
 ```
 
 The repo includes `yarn.lock`, so prefer Yarn when adding or updating dependencies.
+
+## Build Environments
+
+Tracked `.env.dev`, `.env.uat`, and `.env.prod` files contain public sample configuration. DEV uses platform-local API defaults when `API_BASE_URL` is empty; UAT/PROD require HTTPS and `AUTH_MODE=adapter`. Replace `https://uat-api.example.com` and `https://api.example.com` with your backend URLs and configure the authentication adapter before using those builds.
+
+| Environment       | Android                  | iOS on macOS         | Default mode |
+| ----------------- | ------------------------ | -------------------- | ------------ |
+| DEV               | `yarn android:dev`       | `yarn ios:dev`       | Debug        |
+| UAT               | `yarn android:uat`       | `yarn ios:uat`       | Release      |
+| UAT for debugging | `yarn android:uat:debug` | `yarn ios:uat:debug` | Debug        |
+| PROD              | `yarn android:prod`      | `yarn ios:prod`      | Release      |
+
+`yarn android` and `yarn ios` default to DEV. `yarn build:android:uat` and `yarn build:android:prod` produce Release AABs without installing them; Android SDK/Gradle are required. Build scripts use `cross-env` to select `ENVFILE`; `scripts/run-native.js` validates the file before running the platform command and forwards additional CLI arguments. Android and iOS UAT/PROD Release run commands use `--no-packager`. iOS uses the `OriginTemplate-DEV`, `OriginTemplate-UAT`, and `OriginTemplate-PROD` schemes. UAT selects a backend environment independently of `__DEV__`; acceptance builds use Release. DEV/demo authentication is rejected in Release.
+
+Additional device/simulator arguments are supported; environment scripts reject repeated mode/scheme overrides, interactive configuration selection, and prebuilt binaries. iOS uses fixed Xcode/Podfile file mappings and rejects environment overrides through xcconfig or extra build parameters. Write empty values as `KEY=` without quotes. Android Release currently uses the template debug signing key; configure release signing before publishing.
+
+Keep `.env.*` files in UTF-8 without BOM and use LF line endings, including on Windows. `.gitattributes` sets `eol=lf` for those files so native readers stay consistent. Use one `KEY=value` entry per line, unique keys, and separate `#` comment lines; pre-build validation rejects inline comments, escapes, and multiline values.
+
+Start Metro with `yarn start`. Environment values are compiled into the native app by `react-native-config`, so switching files or editing their values requires rebuilding and reinstalling the app. Restarting Metro alone cannot update an installed app's native configuration. Missing native `APP_ENV` fails explicitly. After installing this native dependency, run `bundle exec pod install` from `ios/` on macOS and rebuild both platforms.
+
+MMKV and Keychain names include the environment, so persisted data and sessions remain separate. The native application ID / bundle identifier is shared: installing another environment replaces the current app. Separate co-installed app variants are outside this setup.
+
+See [the template guide](docs/TEMPLATE.md#环境配置) for environment validation, API rules, and integration details.
 
 ## HTTP Contract
 
@@ -66,10 +97,10 @@ The shared HTTP client expects API responses shaped like:
 
 ## Configuration Notes
 
-- `src/config/index.ts` centralizes app, API, query, storage, and auth settings.
+- `src/config/index.ts` centralizes app, API, query, storage, and auth settings. `src/config/environment.ts` validates native `react-native-config` values with canonical `APP_ENV` values `dev`, `uat`, and `prod`.
 - `tamagui.config.ts` creates the Tamagui config from `@tamagui/config/v5` and maps `src/theme` colors to app tokens such as `$surface`, `$surfaceMuted`, `$primary`, `$primaryText`, `$success`, `$warning`, `$danger`, `$color`, `$colorMuted`, and `$borderColor`.
 - `src/contexts/ThemeContext.tsx` owns light/dark/system resolution and wraps the app with `TamaguiProvider`.
-- Android emulator requests use `http://10.0.2.2:3000`; iOS uses `http://localhost:3000`.
+- Development Android emulator requests use `http://10.0.2.2:3000`; iOS uses `http://localhost:3000`.
 - `src/services/i18n` initializes i18next, exports language resolution helpers, and stores translation resources.
 - The default app language is `en-US`; `zh-CN` is also included, and the optional `system` preference resolves through `react-native-localize`.
 - `src/services/storage` exposes an MMKV adapter for app storage and Zustand persistence.

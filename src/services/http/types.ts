@@ -1,11 +1,10 @@
-import {AxiosRequestConfig} from 'axios';
+import type {AxiosRequestConfig} from 'axios';
 
-export interface RequestConfig<TData = unknown> extends Omit<
-  AxiosRequestConfig<TData>,
-  'url' | 'method'
-> {
-  showLoading?: boolean;
-  showError?: boolean;
+export interface RequestConfig<
+  TData = unknown,
+> extends AxiosRequestConfig<TData> {
+  /** Do not attach the app session or invalidate it on a public endpoint's 401. */
+  skipAuth?: boolean;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -14,8 +13,18 @@ export interface ApiResponse<T = unknown> {
   message: string;
 }
 
-export interface ApiError {
+export type HttpErrorKind =
+  | 'http'
+  | 'business'
+  | 'network'
+  | 'timeout'
+  | 'canceled'
+  | 'invalid-response'
+  | 'unknown';
+
+export interface ApiError extends Error {
+  kind: HttpErrorKind;
   code: number;
-  message: string;
+  status?: number;
   details?: unknown;
 }

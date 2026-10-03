@@ -4,6 +4,13 @@ const zhCN = {
   common: {
     loading: '加载中...',
   },
+  forms: {
+    showPassword: '显示',
+    hidePassword: '隐藏',
+    required: '此项为必填项。',
+    invalidEmail: '请输入有效的邮箱地址。',
+    minLength: '请至少输入 {{count}} 个字符。',
+  },
   navigation: {
     template: '模板',
     profile: '个人资料',
@@ -110,7 +117,16 @@ const zhCN = {
     signOut: '退出登录',
     backHome: '返回首页',
     signedOut: '已退出登录',
-    signedIn: '已使用模板账户登录',
+    signedIn: '已登录',
+    email: '邮箱',
+    emailPlaceholder: 'you@example.com',
+    password: '密码',
+    passwordHelp: '请至少输入 8 个字符。',
+    demoDescription:
+      '演示登录：输入有效邮箱和至少 8 位密码，即可创建本地示例会话。',
+    adapterDescription:
+      '使用你的账号登录。接入身份认证服务后，才能使用真实账号登录。',
+    authFailed: '无法完成登录或退出，请重试。',
   },
 } satisfies TranslationResource;
 

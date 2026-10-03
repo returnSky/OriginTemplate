@@ -1,4 +1,4 @@
-import http from '@/services/http';
+import http, {type RequestConfig} from '@/services/http';
 
 export interface UserInfo {
   id: string;
@@ -12,11 +12,19 @@ export interface UpdateUserInfoPayload {
 }
 
 export const userApi = {
-  getUserInfo: (userId: string) => {
-    return http.get<UserInfo>(`/user/${userId}`);
+  getUserInfo: (userId: string, config?: RequestConfig) => {
+    return http.get<UserInfo>(`/user/${encodeURIComponent(userId)}`, config);
   },
 
-  updateUserInfo: (userId: string, data: UpdateUserInfoPayload) => {
-    return http.put<UserInfo, UpdateUserInfoPayload>(`/user/${userId}`, data);
+  updateUserInfo: (
+    userId: string,
+    data: UpdateUserInfoPayload,
+    config?: RequestConfig<UpdateUserInfoPayload>,
+  ) => {
+    return http.put<UserInfo, UpdateUserInfoPayload>(
+      `/user/${encodeURIComponent(userId)}`,
+      data,
+      config,
+    );
   },
 };

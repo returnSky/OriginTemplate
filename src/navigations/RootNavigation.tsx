@@ -8,7 +8,9 @@ import {
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {useTranslation} from 'react-i18next';
 
+import {Screen, StateView} from '@/components';
 import {useAppTheme} from '@/contexts/ThemeContext';
+import {useAuthStore} from '@/stores/authStore';
 import Home from '@/pages/Home';
 import Profile from '@/pages/Profile';
 import Settings from '@/pages/Settings';
@@ -24,6 +26,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const RootStack = () => {
   const {theme} = useAppTheme();
   const {t} = useTranslation();
+  const sessionKey = useAuthStore(state =>
+    state.accessToken ? 'user:' + (state.user?.id ?? 'signed-in') : 'guest',
+  );
 
   return (
     <Stack.Navigator
@@ -34,27 +39,31 @@ const RootStack = () => {
         headerTitleStyle: {fontWeight: '700'},
         contentStyle: {backgroundColor: theme.colors.background},
       }}>
-      <Stack.Screen
-        name="Home"
-        component={Home}
-        options={{title: t('navigation.template')}}
-      />
-      <Stack.Screen
-        name="Profile"
-        component={Profile}
-        options={{title: t('navigation.profile')}}
-      />
-      <Stack.Screen
-        name="Settings"
-        component={Settings}
-        options={{title: t('navigation.settings')}}
-      />
+      <Stack.Group navigationKey={sessionKey}>
+        <Stack.Screen
+          name="Home"
+          component={Home}
+          options={{title: t('navigation.template')}}
+        />
+        <Stack.Screen
+          name="Profile"
+          component={Profile}
+          options={{title: t('navigation.profile')}}
+        />
+        <Stack.Screen
+          name="Settings"
+          component={Settings}
+          options={{title: t('navigation.settings')}}
+        />
+      </Stack.Group>
     </Stack.Navigator>
   );
 };
 
 const RootNavigation = () => {
   const {theme, isDark} = useAppTheme();
+  const initializing = useAuthStore(state => state.initializing);
+  const {t} = useTranslation();
   const baseTheme = isDark ? DarkTheme : DefaultTheme;
   const navigationTheme = {
     ...baseTheme,
@@ -72,9 +81,15 @@ const RootNavigation = () => {
   return (
     <>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <NavigationContainer theme={navigationTheme}>
-        <RootStack />
-      </NavigationContainer>
+      {initializing ? (
+        <Screen edges={['top', 'bottom']}>
+          <StateView variant="loading" title={t('common.loading')} />
+        </Screen>
+      ) : (
+        <NavigationContainer theme={navigationTheme}>
+          <RootStack />
+        </NavigationContainer>
+      )}
     </>
   );
 };

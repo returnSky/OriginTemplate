@@ -2,12 +2,14 @@ import {QueryClient} from '@tanstack/react-query';
 
 import {appConfig} from '@/config';
 
+import {shouldRetryQuery} from './retry';
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: appConfig.query.staleTime,
       gcTime: appConfig.query.gcTime,
-      retry: appConfig.query.retry,
+      retry: shouldRetryQuery,
       refetchOnReconnect: true,
       refetchOnMount: true,
     },
