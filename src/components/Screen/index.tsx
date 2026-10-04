@@ -1,11 +1,21 @@
 import React, {PropsWithChildren} from 'react';
-import {ScrollView, StyleProp, StyleSheet, View, ViewStyle} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleProp,
+  StyleSheet,
+  ViewStyle,
+} from 'react-native';
+import {SafeAreaView, type Edge} from 'react-native-safe-area-context';
+import {ScrollView, YStack} from 'tamagui';
 
 import {useAppTheme} from '@/contexts/ThemeContext';
 
-interface ScreenProps extends PropsWithChildren {
+export interface ScreenProps extends PropsWithChildren {
   scroll?: boolean;
+  keyboardAvoiding?: boolean;
+  keyboardVerticalOffset?: number;
+  edges?: Edge[];
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
 }
@@ -13,35 +23,50 @@ interface ScreenProps extends PropsWithChildren {
 const Screen = ({
   children,
   scroll = false,
+  keyboardAvoiding = false,
+  keyboardVerticalOffset = 0,
+  edges = ['bottom'],
   style,
   contentContainerStyle,
 }: ScreenProps) => {
   const {theme} = useAppTheme();
-
-  if (scroll) {
-    return (
-      <SafeAreaView
-        edges={['bottom']}
-        style={[styles.container, {backgroundColor: theme.colors.background}]}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          style={styles.flex}
-          contentContainerStyle={[
-            styles.content,
-            contentContainerStyle,
-            style,
-          ]}>
-          {children}
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
+  const content = scroll ? (
+    <ScrollView
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      contentContainerStyle={styles.scrollContent}
+      flex={1}>
+      <YStack padding={16} style={StyleSheet.flatten(contentContainerStyle)}>
+        {children}
+      </YStack>
+    </ScrollView>
+  ) : (
+    <YStack
+      flex={1}
+      padding={16}
+      style={StyleSheet.flatten(contentContainerStyle)}>
+      {children}
+    </YStack>
+  );
 
   return (
     <SafeAreaView
-      edges={['bottom']}
-      style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <View style={[styles.content, styles.flex, style]}>{children}</View>
+      edges={edges}
+      style={[
+        styles.container,
+        {backgroundColor: theme.colors.background},
+        style,
+      ]}>
+      {keyboardAvoiding ? (
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={keyboardVerticalOffset}>
+          {content}
+        </KeyboardAvoidingView>
+      ) : (
+        content
+      )}
     </SafeAreaView>
   );
 };
@@ -50,11 +75,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  flex: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
+  scrollContent: {
+    flexGrow: 1,
   },
 });
 

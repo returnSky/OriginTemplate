@@ -14,6 +14,20 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+# Keep CocoaPods debug/release semantics for the UAT configurations.
+project 'OriginTemplate',
+  'Debug' => :debug,
+  'Release' => :release,
+  'Debug-UAT' => :debug,
+  'Release-UAT' => :release
+
+ENVIRONMENT_CONFIGURATIONS = {
+  'Debug' => {file: '.env.dev', env: 'dev', release: false},
+  'Release' => {file: '.env.prod', env: 'prod', release: true},
+  'Debug-UAT' => {file: '.env.uat', env: 'uat', release: false},
+  'Release-UAT' => {file: '.env.uat', env: 'uat', release: true},
+}.freeze
+
 target 'OriginTemplate' do
   config = use_native_modules!
 
@@ -30,5 +44,44 @@ target 'OriginTemplate' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'react-native-config'
+
+      target.build_configurations.each do |build_configuration|
+        environment = ENVIRONMENT_CONFIGURATIONS.fetch(build_configuration.name)
+        build_configuration.build_settings['ENVFILE'] = environment[:file]
+        build_configuration.build_settings['EXPECTED_APP_ENV'] = environment[:env]
+        build_configuration.build_settings['ENVIRONMENT_RELEASE_BUILD'] = environment[:release].to_s
+      end
+
+      # Validate before the library generates native values. The library otherwise
+      # falls back to .env when ENVFILE is missing, even for release builds.
+      codegen = target.shell_script_build_phases.find do |phase|
+        phase.name.to_s.include?('Config codegen')
+      end
+      raise Pod::Informative, 'react-native-config Config codegen phase was not found' unless codegen
+
+      validation = <<~'SH'
+        set -e
+        if [ -e /tmp/envfile ]; then
+          echo "error: /tmp/envfile overrides react-native-config ENVFILE. Remove this legacy override before building." >&2
+          exit 1
+        fi
+        APP_ROOT="${PODFILE_DIR:-${PODS_ROOT}/..}/.."
+        if [ -f "$APP_ROOT/ios/.xcode.env" ]; then
+          . "$APP_ROOT/ios/.xcode.env"
+        fi
+        if [ -f "$APP_ROOT/ios/.xcode.env.local" ]; then
+          . "$APP_ROOT/ios/.xcode.env.local"
+        fi
+        NODE_BINARY="${NODE_BINARY:-$(command -v node)}"
+        "$NODE_BINARY" "$APP_ROOT/scripts/check-environment.js" \
+          --env-file "$ENVFILE" \
+          --expected-env "$EXPECTED_APP_ENV" \
+          --release "$ENVIRONMENT_RELEASE_BUILD"
+      SH
+      codegen.shell_script = validation + codegen.shell_script
+    end
   end
 end

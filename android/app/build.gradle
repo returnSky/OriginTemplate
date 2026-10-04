@@ -2,6 +2,29 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
+// react-native-config reads one environment file for the complete Gradle invocation.
+// Set ENVFILE explicitly when building multiple variants in the same invocation.
+def requestedBuildTasks = gradle.startParameter.taskNames.collect { it.toLowerCase() }
+def requestsRelease = requestedBuildTasks.any { it.contains("release") }
+def requestsDebug = requestedBuildTasks.any { it.contains("debug") }
+def explicitEnvFile = providers.environmentVariable("ENVFILE").orNull ?: System.getProperty("ENVFILE")
+if (!explicitEnvFile && requestsRelease && requestsDebug) {
+    throw new GradleException("Set ENVFILE when building Debug and Release together.")
+}
+def selectedEnvFile = explicitEnvFile ?: (requestsRelease ? ".env.prod" : ".env.dev")
+def appRoot = rootDir.parentFile
+def appEnvironmentFile = new File(selectedEnvFile)
+if (!appEnvironmentFile.isAbsolute()) {
+    appEnvironmentFile = new File(appRoot, selectedEnvFile)
+}
+appEnvironmentFile = appEnvironmentFile.canonicalFile
+if (!appEnvironmentFile.isFile()) {
+    throw new GradleException("Environment file does not exist: ${appEnvironmentFile}")
+}
+project.ext.defaultEnvFile = selectedEnvFile
+project.ext.envConfigFiles = [debug: ".env.dev", release: ".env.prod"]
+apply from: project(":react-native-config").projectDir.getPath() + "/dotenv.gradle"
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -84,6 +107,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        resValue "string", "build_config_package", "com.origintemplate"
     }
     signingConfigs {
         debug {
@@ -102,8 +126,41 @@ android {
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
+    }
+}
+
+// Validate the same file used by dotenv.gradle before generating native constants.
+// Tracking its content and path prevents stale config when ENVFILE changes.
+androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+    def variantSuffix = variant.name.capitalize()
+    def environmentCheck = tasks.register("validate${variantSuffix}Environment", Exec) {
+        group = "verification"
+        description = "Validate ${variant.name} application environment."
+        workingDir appRoot
+        commandLine "node", new File(appRoot, "scripts/check-environment.js"),
+                "--env-file", appEnvironmentFile.absolutePath,
+                "--release", (!variant.debuggable).toString()
+        inputs.file(appEnvironmentFile).withPropertyName("appEnvironmentFile")
+        inputs.dir(new File(appRoot, "scripts")).withPropertyName("environmentValidationScripts")
+    }
+    tasks.matching { it.name == "pre${variantSuffix}Build" }.configureEach {
+        dependsOn(environmentCheck)
+    }
+    tasks.matching {
+        it.name == "generate${variantSuffix}BuildConfig" ||
+                it.name == "generate${variantSuffix}ResValues"
+    }.configureEach {
+        dependsOn(environmentCheck)
+        inputs.file(appEnvironmentFile).withPropertyName("appEnvironmentFile")
+        inputs.property("appEnvironmentFilePath", appEnvironmentFile.absolutePath)
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    if (!explicitEnvFile && graph.hasTask(":app:preDebugBuild") && graph.hasTask(":app:preReleaseBuild")) {
+        throw new GradleException("Set ENVFILE when building Debug and Release together.")
     }
 }
 

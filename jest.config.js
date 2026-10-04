@@ -1,10 +1,18 @@
 module.exports = {
   preset: '@react-native/jest-preset',
+  testEnvironment: 'node',
+  testEnvironmentOptions: {
+    customExportConditions: ['require', 'react-native'],
+  },
+  transform: {
+    '^.+\\.(js|ts|tsx)$': require.resolve('babel-jest'),
+  },
   moduleNameMapper: {
+    '^react-native-config$': '<rootDir>/__mocks__/react-native-config.ts',
     '^react-native-localize$': '<rootDir>/__mocks__/react-native-localize.ts',
     '^react-native-mmkv$': '<rootDir>/__mocks__/react-native-mmkv.ts',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@react-navigation|@tanstack|react-native-localize|react-native-safe-area-context|react-native-screens|react-native-toast-message|react-native-mmkv|react-native-nitro-modules|zustand)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@react-navigation|@tanstack|@tamagui|tamagui|react-native-localize|react-native-safe-area-context|react-native-screens|react-native-toast-message|react-native-mmkv|react-native-nitro-modules|zustand)/)',
   ],
 };

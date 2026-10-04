@@ -1,6 +1,7 @@
 import axios, {AxiosInstance, AxiosResponse} from 'axios';
 
 import {appConfig} from '@/config';
+import {getAuthSessionRevision} from '@/services/auth/sessionEvents';
 
 import {requestInterceptor, responseInterceptor} from './interceptors';
 import {ApiResponse, RequestConfig} from './types';
@@ -16,55 +17,60 @@ const instance: AxiosInstance = axios.create({
 requestInterceptor(instance);
 responseInterceptor(instance);
 
-const unwrapResponse = <T>(response: AxiosResponse<ApiResponse<T>>) => {
-  return response.data.data;
+const unwrapResponse = <T>(response: AxiosResponse<ApiResponse<T>>) =>
+  response.data.data;
+
+const request = async <T = unknown, TData = unknown>(
+  config: RequestConfig<TData>,
+): Promise<T> => {
+  const requestConfig = {
+    ...config,
+    __authSessionRevision: config.skipAuth
+      ? undefined
+      : getAuthSessionRevision(),
+  };
+  const response = await instance.request<ApiResponse<T>>(requestConfig);
+  return unwrapResponse(response);
 };
 
 export const http = {
-  request: async <T = unknown, TData = unknown>(
-    config: RequestConfig<TData>,
-  ) => {
-    const response = await instance.request<ApiResponse<T>>(config);
-    return unwrapResponse(response);
-  },
+  request,
 
-  get: async <T = unknown>(url: string, config?: RequestConfig) => {
-    const response = await instance.get<ApiResponse<T>>(url, config);
-    return unwrapResponse(response);
-  },
+  get: <T = unknown>(url: string, config?: RequestConfig) =>
+    request<T>({...config, url, method: 'GET'}),
 
-  post: async <T = unknown, TData = unknown>(
+  post: <T = unknown, TData = unknown>(
     url: string,
     data?: TData,
     config?: RequestConfig<TData>,
-  ) => {
-    const response = await instance.post<ApiResponse<T>>(url, data, config);
-    return unwrapResponse(response);
-  },
+  ) => request<T, TData>({...config, url, method: 'POST', data}),
 
-  put: async <T = unknown, TData = unknown>(
+  put: <T = unknown, TData = unknown>(
     url: string,
     data?: TData,
     config?: RequestConfig<TData>,
-  ) => {
-    const response = await instance.put<ApiResponse<T>>(url, data, config);
-    return unwrapResponse(response);
-  },
+  ) => request<T, TData>({...config, url, method: 'PUT', data}),
 
-  delete: async <T = unknown>(url: string, config?: RequestConfig) => {
-    const response = await instance.delete<ApiResponse<T>>(url, config);
-    return unwrapResponse(response);
-  },
+  delete: <T = unknown>(url: string, config?: RequestConfig) =>
+    request<T>({...config, url, method: 'DELETE'}),
 
-  patch: async <T = unknown, TData = unknown>(
+  patch: <T = unknown, TData = unknown>(
     url: string,
     data?: TData,
     config?: RequestConfig<TData>,
-  ) => {
-    const response = await instance.patch<ApiResponse<T>>(url, data, config);
-    return unwrapResponse(response);
-  },
+  ) => request<T, TData>({...config, url, method: 'PATCH', data}),
 };
 
 export default http;
-export type {ApiError, ApiResponse, RequestConfig} from './types';
+export type {
+  ApiError,
+  ApiResponse,
+  HttpErrorKind,
+  RequestConfig,
+} from './types';
+export {
+  HttpError,
+  isHttpError,
+  isCanceledError,
+  normalizeHttpError,
+} from './errors';

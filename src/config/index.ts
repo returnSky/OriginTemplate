@@ -1,6 +1,9 @@
 import {Platform} from 'react-native';
+import Config from 'react-native-config';
 
-export type AppEnv = 'development' | 'staging' | 'production';
+import {resolveEnvironment} from './environment';
+
+export type {AppEnv, AuthMode} from './environment';
 export const appLanguages = ['en-US', 'zh-CN'] as const;
 export type AppLanguage = (typeof appLanguages)[number];
 export type AppLanguagePreference = AppLanguage | 'system';
@@ -13,12 +16,22 @@ const localApiURL =
     default: 'http://localhost:3000',
   }) ?? 'http://localhost:3000';
 
+export const buildEnvironment = resolveEnvironment(
+  {
+    env: Config.APP_ENV,
+    apiBaseURL: Config.API_BASE_URL,
+    authMode: Config.AUTH_MODE,
+  },
+  __DEV__,
+  localApiURL,
+);
+
 export const appConfig = {
   appName: 'OriginTemplate',
-  env: (__DEV__ ? 'development' : 'production') as AppEnv,
+  env: buildEnvironment.env,
   supportEmail: 'support@example.com',
   api: {
-    baseURL: localApiURL,
+    baseURL: buildEnvironment.apiBaseURL,
     timeout: 10 * 1000,
     successCode: 200,
   },
@@ -34,7 +47,7 @@ export const appConfig = {
   },
   storage: {
     mmkv: {
-      id: 'origin-template.storage',
+      id: 'origin-template.storage.' + buildEnvironment.env,
       compareBeforeSet: true,
     },
     keys: {
@@ -43,8 +56,9 @@ export const appConfig = {
     },
   },
   auth: {
-    keychainService: 'com.origintemplate.auth',
-    keychainAccount: 'origin-template-session',
+    mode: buildEnvironment.authMode,
+    keychainService: 'com.origintemplate.auth.' + buildEnvironment.env,
+    keychainAccount: 'origin-template-session-' + buildEnvironment.env,
   },
 };
 
